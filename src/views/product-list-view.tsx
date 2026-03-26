@@ -9,50 +9,53 @@ import {
     View,
 } from "react-native";
 import { Link } from "expo-router";
-
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { AuthController } from "@/src/controllers/auth-controller";
-import { Category } from "@/src/models/category";
+import { ProductController } from "@/src/controllers/product-controller";
+import { Product } from "@/src/models/product";
 
-export default function CategoryListView() {
-  const controller = useMemo(() => new AuthController(), []);
-  const [categories, setCategories] = useState<Category[]>([]);
+interface Props {
+  categoryId: string;
+}
+
+export default function ProductListView({ categoryId }: Props) {
+  const controller = useMemo(() => new ProductController(), []);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await controller.categories();
-        setCategories(data);
-      } catch {
-        Alert.alert("Lỗi", "Không thể tải danh mục sản phẩm.");
+        const data = await controller.getProductsByCategory(categoryId);
+        setProducts(data);
+      } catch (error: any) {
+        Alert.alert("Lỗi", error.message || "Không thể tải sản phẩm.");
       } finally {
         setLoading(false);
       }
     };
 
     load();
-  }, [controller]);
+  }, [categoryId, controller]);
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Categories</ThemedText>
+      <ThemedText type="title">Sản phẩm</ThemedText>
       <ThemedText style={styles.subtitle}>
-        Danh sách danh mục sản phẩm
+        Danh sách sản phẩm theo danh mục
       </ThemedText>
 
       {loading ? (
         <ActivityIndicator />
       ) : (
         <FlatList
-          data={categories}
+          data={products}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<ThemedText>Chưa có danh mục nào.</ThemedText>}
+          ListEmptyComponent={<ThemedText>Chưa có sản phẩm nào.</ThemedText>}
           renderItem={({ item }) => (
-            <Link href={`/category/${item.id}` as any} asChild>
+            <Link href={`/product/${item.id}` as any} asChild>
               <TouchableOpacity>
                 <View style={styles.item}>
                   <Image
@@ -60,7 +63,10 @@ export default function CategoryListView() {
                     style={styles.image}
                     resizeMode="cover"
                   />
-                  <ThemedText>{item.name}</ThemedText>
+                  <View style={styles.details}>
+                    <ThemedText type="defaultSemiBold">{item.name}</ThemedText>
+                    <ThemedText style={styles.price}>${item.price.toFixed(2)}</ThemedText>
+                  </View>
                 </View>
               </TouchableOpacity>
             </Link>
@@ -86,6 +92,7 @@ const styles = StyleSheet.create({
   },
   item: {
     borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     flexDirection: "row",
@@ -93,9 +100,17 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   image: {
-    width: 48,
-    height: 48,
+    width: 64,
+    height: 64,
     borderRadius: 8,
     backgroundColor: "#ddd",
+  },
+  details: {
+    flex: 1,
+    gap: 4,
+  },
+  price: {
+    color: '#e91e63',
+    fontWeight: 'bold',
   },
 });

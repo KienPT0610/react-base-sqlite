@@ -1,5 +1,5 @@
-import TodoListView from '@/src/views/todo-list-view';
+import CategoryListView from '@/src/views/category-list-view';
 
 export default function HomeScreen() {
-  return <TodoListView />;
+  return <CategoryListView />;
 }
